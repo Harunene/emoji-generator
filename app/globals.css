@@ -52,6 +52,7 @@
 @layer base {
   * {
     @apply border-border;
+    word-break: keep-all;
   }
   body {
     @apply bg-background text-foreground;
