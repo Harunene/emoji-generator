@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "APNG 이미지 효과 생성기",
-  description: "이미지에 다양한 효과를 주어 APNG로 만들어주는 웹서비스",
+  title: "이미지 생성기",
+  description: "광고덕지덕지된 사이트 화나서 내가 직접 만들었음",
 };
 
 export default function RootLayout({
@@ -20,4 +20,3 @@ export default function RootLayout({
     </html>
   );
 }
-
