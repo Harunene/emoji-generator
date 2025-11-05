@@ -5,8 +5,9 @@ import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Slider } from "./ui/slider";
 import { Label } from "./ui/label";
-import { Download, Loader2, Play, Pause } from "lucide-react";
+import { Download, Loader2, Play, Pause, FileImage } from "lucide-react";
 import { generateAPNG, downloadBlob } from "@/lib/apng-generator";
+import { generateGIF } from "@/lib/gif-generator";
 import type { EffectRenderer, RenderContext } from "@/lib/effects/types";
 import type { OutputSize } from "@/lib/types";
 
@@ -45,6 +46,7 @@ export default function EffectPreview<
   const [currentFrame, setCurrentFrame] = useState(0);
   const [isDraggingSlider, setIsDraggingSlider] = useState(false);
   const [contextKey, setContextKey] = useState(0); // 컨텍스트 재생성 추적
+  const [isGeneratingGIF, setIsGeneratingGIF] = useState(false);
 
   // 특정 프레임 렌더링
   const renderFrame = useCallback(
@@ -164,7 +166,7 @@ export default function EffectPreview<
     renderFrame(currentFrame);
   }, [currentFrame, renderFrame]);
 
-  const handleGenerate = async () => {
+  const handleGenerateAPNG = async () => {
     if (!image) return;
 
     setIsGenerating(true);
@@ -197,6 +199,42 @@ export default function EffectPreview<
       alert("APNG 생성에 실패했습니다.");
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const handleGenerateGIF = async () => {
+    if (!image) return;
+
+    setIsGeneratingGIF(true);
+    setGenerationProgress(0);
+
+    try {
+      const blob = await generateGIF(
+        image,
+        renderer,
+        options,
+        {
+          frameCount: totalFrames,
+          fps,
+          outputSize,
+        },
+        (p) => setGenerationProgress(Math.round(p))
+      );
+
+      // 자동 다운로드
+      const timestamp = new Date().getTime();
+      downloadBlob(
+        blob,
+        `animated-effect-${outputSize}x${outputSize}-${timestamp}.gif`
+      );
+
+      // 다운로드 성공 메시지
+      alert("GIF가 다운로드되었습니다!");
+    } catch (error) {
+      console.error("Failed to generate GIF:", error);
+      alert("GIF 생성에 실패했습니다.");
+    } finally {
+      setIsGeneratingGIF(false);
     }
   };
 
@@ -299,21 +337,42 @@ export default function EffectPreview<
                     </>
                   )}
                 </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
                 <Button
-                  onClick={handleGenerate}
-                  disabled={isGenerating}
+                  onClick={handleGenerateAPNG}
+                  disabled={isGenerating || isGeneratingGIF}
                   size="lg"
-                  className="flex-1"
+                  className="w-full"
                 >
                   {isGenerating ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      생성 중... {generationProgress}%
+                      {generationProgress}%
                     </>
                   ) : (
                     <>
                       <Download className="mr-2 h-4 w-4" />
-                      APNG 다운로드
+                      APNG
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={handleGenerateGIF}
+                  disabled={isGenerating || isGeneratingGIF}
+                  size="lg"
+                  variant="secondary"
+                  className="w-full"
+                >
+                  {isGeneratingGIF ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {generationProgress}%
+                    </>
+                  ) : (
+                    <>
+                      <FileImage className="mr-2 h-4 w-4" />
+                      GIF
                     </>
                   )}
                 </Button>
